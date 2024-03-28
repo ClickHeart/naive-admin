@@ -69,6 +69,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/redis/go-redis/v9 v9.5.1
+	github.com/sony/sonyflake v1.2.0
 	github.com/spf13/viper v1.18.2
 	golang.org/x/sys v0.15.0 // indirect
 	gorm.io/driver/postgres v1.5.7

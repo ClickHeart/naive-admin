@@ -1,7 +1,7 @@
 package sid
 
 import (
-	"myProject/pkg/utils/convert"
+	"naive-admin/pkg/utils/convert"
 
 	"github.com/sony/sonyflake"
 )
