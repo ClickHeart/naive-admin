@@ -5,9 +5,12 @@ import (
 	"errors"
 	"naive-admin/internal/inout"
 	"naive-admin/internal/model"
-	"naive-admin/internal/repository"
+	r "naive-admin/internal/repository"
+	"naive-admin/pkg/config"
+	"naive-admin/pkg/utils/jwt"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -16,9 +19,9 @@ var UserService = &userService{}
 type userService struct {
 }
 
-func (userService) Register(c context.Context, data inout.AddUserReq) error {
+func (userService) Create(c context.Context, data inout.AddUserReq) error {
 	// check username
-	user, err := repository.UserRepo.GetByUsername(c, data.Username)
+	user, err := r.UserRepo.GetByUsername(c, data.Username)
 	if err != nil {
 		return err
 	}
@@ -40,13 +43,13 @@ func (userService) Register(c context.Context, data inout.AddUserReq) error {
 		UpdateTime: time.Now(),
 	}
 
-	err = repository.Repo.Transaction(c, func(ctx context.Context) error {
+	err = r.Repo.Transaction(c, func(ctx context.Context) error {
 		// Create a user
-		if err = repository.UserRepo.Create(ctx, &newUser); err != nil {
+		if err = r.UserRepo.Create(ctx, &newUser); err != nil {
 			return err
 		}
 
-		if err = repository.ProfileRepo.Create(ctx, &model.Profile{
+		if err = r.ProfileRepo.Create(ctx, &model.Profile{
 			UserId:   newUser.ID,
 			NickName: newUser.Username,
 		}); err != nil {
@@ -54,7 +57,7 @@ func (userService) Register(c context.Context, data inout.AddUserReq) error {
 		}
 
 		for _, id := range data.RoleIds {
-			if err = repository.UserRolesRepo.Create(ctx, &model.UserRolesRole{
+			if err = r.UserRolesRepo.Create(ctx, &model.UserRolesRole{
 				UserId: newUser.ID,
 				RoleId: id,
 			}); err != nil {
@@ -68,21 +71,38 @@ func (userService) Register(c context.Context, data inout.AddUserReq) error {
 
 }
 
-func (userService) Detail(c context.Context, uid int) (data inout.UserDetailRes, err error) {
+func (userService) Login(c *gin.Context, data inout.LoginReq) (string, error) {
+	user, err := r.UserRepo.GetByUsername(c, data.Username)
+	if err != nil {
+		return "", err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data.Password))
+	if err != nil {
+		return "", err
+	}
+	j := jwt.NewJwt(&config.Conf.Security.Jwt)
+	token, err := j.GenToken(user.ID, time.Now().Add(time.Hour*1))
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
 
-	user, err := repository.UserRepo.GetById(c, uid)
+func (userService) GetDetail(c context.Context, uid int) (data inout.UserDetailRes, err error) {
+
+	user, err := r.UserRepo.GetById(c, uid)
 	if err != nil {
 		return
 	}
 	data.User = *user
 
-	profile, err := repository.ProfileRepo.GetByUserId(c, uid)
+	profile, err := r.ProfileRepo.GetByUserId(c, uid)
 	if err != nil {
 		return
 	}
 	data.Profile = profile
 
-	roles, err := repository.RoleRepo.GetByUserId(c, uid)
+	roles, err := r.RoleRepo.GetByUserId(c, uid)
 	if err != nil {
 		return
 	}
@@ -92,4 +112,69 @@ func (userService) Detail(c context.Context, uid int) (data inout.UserDetailRes,
 		data.CurrentRole = data.Roles[0]
 	}
 	return
+}
+
+func (userService) ChangePassword(c context.Context, uid int, data inout.AuthPwReq) error {
+	user, err := r.UserRepo.GetById(c, uid)
+	if err != nil {
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data.OldPassword)); err != nil {
+		return err
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(data.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.Password = string(hashedPassword)
+	if err := r.UserRepo.Update(c, user); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (userService) ChangeProfile(c context.Context, data inout.PatchProfileUserReq) error {
+	var profile = &model.Profile{
+		ID:       data.Id,
+		Gender:   data.Gender,
+		Address:  data.Address,
+		Email:    data.Email,
+		NickName: data.NickName,
+	}
+
+	if err := r.ProfileRepo.Update(c, profile); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (userService) Update(c context.Context, data inout.PatchUserReq) error {
+	var user model.User
+	var profile model.Profile
+	if data.Password != nil {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*data.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		user.Password = string(hashedPassword)
+	}
+	if data.Enable != nil {
+		user.Enable = *data.Enable
+	}
+	if data.Username != nil {
+		user.Username = *data.Username
+		profile.NickName = *data.Username
+		profile.UserId = data.Id
+		if err := r.ProfileRepo.Update(c, &profile); err != nil {
+			return err
+		}
+	}
+	if err := r.UserRepo.Update(c, &user); err != nil {
+		return err
+	}
+	return nil
 }

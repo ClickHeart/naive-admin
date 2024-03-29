@@ -21,6 +21,14 @@ func (r userRepo) Create(c context.Context, user *model.User) error {
 	return nil
 }
 
+func (r userRepo) Update(c context.Context, user *model.User) error {
+
+	if err := r.DB(c).Model(&user).Updates(user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r userRepo) GetById(c context.Context, id int) (*model.User, error) {
 	var user model.User
 	if err := r.DB(c).Where("id = ?", id).First(&user).Error; err != nil {
@@ -36,7 +44,7 @@ func (r userRepo) GetByUsername(c context.Context, username string) (*model.User
 	var user model.User
 	if err := r.DB(c).Model(model.User{}).Where("username = ?", username).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, gorm.ErrRecordNotFound
 		}
 		return nil, err
 	}

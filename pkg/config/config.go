@@ -1,9 +1,10 @@
 package config
 
 type Config struct {
-	Log    *Log    `yaml:"log"`
-	Data   *Data   `yaml:"data"`
-	Server *Server `yaml:"server"`
+	Log      *Log      `yaml:"log"`
+	Data     *Data     `yaml:"data"`
+	Server   *Server   `yaml:"server"`
+	Security *Security `yaml:"security"`
 }
 
 // -----------------------------------------
@@ -62,3 +63,10 @@ type Log struct {
 }
 
 // -----------------------------------------
+type Security struct {
+	Jwt Jwt `yaml:"jwt"`
+}
+
+type Jwt struct {
+	SigningKey string `yaml:"signing_key"`
+}

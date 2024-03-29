@@ -8,11 +8,8 @@ server:
     password:
 
 security:
-  api_sign:
-    app_key: 123456
-    app_security: 123456
   jwt:
-    key: QQYnRFerJTSEcrfB89fw8prOaObmrch8
+    signing_key: QQYnRFerJTSEcrfB89fw8prOaObmrch8
 
 data:
   pgsql:

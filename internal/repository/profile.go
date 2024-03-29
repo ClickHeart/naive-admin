@@ -21,6 +21,14 @@ func (r profileRepo) Create(c context.Context, profile *model.Profile) error {
 	return nil
 }
 
+func (r profileRepo) Update(c context.Context, profile *model.Profile) error {
+
+	if err := r.DB(c).Model(&profile).Updates(profile).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r profileRepo) GetByUserId(c context.Context, id int) (*model.Profile, error) {
 	var profile model.Profile
 	if err := r.DB(c).Model(model.Profile{}).Where("userId = ?", id).First(&profile).Error; err != nil {

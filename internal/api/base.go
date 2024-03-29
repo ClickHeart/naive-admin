@@ -30,7 +30,7 @@ func (rps) Succ(c *gin.Context, data any) {
 func (rps) Err(c *gin.Context, ErrCode int, messge string) {
 	resp := rps{
 		Code:      ErrCode,
-		Error:     "error some",
+		Error:     "Error",
 		Message:   messge,
 		OriginUrl: c.Request.URL.Path,
 	}
