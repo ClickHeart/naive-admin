@@ -59,7 +59,7 @@ func (userService) Create(c context.Context, data inout.AddUserReq) error {
 		}
 
 		for _, id := range data.RoleIds {
-			if err = r.UserRolesRepo.Create(ctx, &model.UserRolesRole{
+			if err = r.UserRolesRepo.Create(ctx, &model.UserRoles{
 				UserId: newUser.ID,
 				RoleId: id,
 			}); err != nil {

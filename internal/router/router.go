@@ -14,24 +14,30 @@ func Init(r *gin.Engine) {
 	r.Use(sessions.Sessions("mysession", cookie.NewStore([]byte("captch"))))
 	r.Use(middleware.Cors())
 
-	noAuth := r.Group("/")
-	{
-		noAuth.GET("/auth/captcha", api.Auth.Captcha)
-		noAuth.POST("/auth/register", api.Auth.Register)
-		noAuth.POST("/auth/login", api.Auth.Login)
-	}
+	r.GET("/auth/captcha", api.Auth.Captcha)
+	r.POST("/auth/register", api.Auth.Register)
+	r.POST("/auth/login", api.Auth.Login)
 
-	Auth := r.Group("/").Use(middleware.Jwt())
+	a := r.Group("/").Use(middleware.Jwt())
 	{
-		Auth.POST("/auth/logout", api.Auth.Logout)
-		Auth.POST("/auth/password", api.Auth.Password)
+		a.POST("/auth/logout", api.Auth.Logout)
+		a.POST("/auth/password", api.Auth.Password)
 
-		Auth.GET("/user", api.User.List)
-		Auth.POST("/user", api.User.Add)
-		Auth.DELETE("/user/:id", api.User.Delete)
-		Auth.PATCH("/user/password/reset/:id", api.User.Update)
-		Auth.PATCH("/user/:id", api.User.Update)
-		Auth.PATCH("/user/profile/:id", api.User.Profile)
-		Auth.GET("/user/detail", api.User.Detail)
+		a.GET("/user", api.User.List)
+		a.POST("/user", api.User.Add)
+		a.DELETE("/user/:id", api.User.Delete)
+		a.PATCH("/user/password/reset/:id", api.User.Update)
+		a.PATCH("/user/:id", api.User.Update)
+		a.PATCH("/user/profile/:id", api.User.Profile)
+		a.GET("/user/detail", api.User.Detail)
+
+		a.GET("/role", api.Role.List)
+		a.POST("/role", api.Role.Add)
+		a.PATCH("/role/:id", api.Role.Update)
+		a.DELETE("/role/:id", api.Role.Delete)
+		a.PATCH("/role/users/add/:id", api.Role.AddUser)
+		a.PATCH("/role/users/remove/:id", api.Role.RemoveUser)
+		a.GET("/role/page", api.Role.ListPage)
+		a.GET("/role/permissions/tree", api.Role.PermissionsTree)
 	}
 }

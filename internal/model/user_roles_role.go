@@ -1,10 +1,10 @@
 package model
 
-type UserRolesRole struct {
+type UserRoles struct {
 	UserId int
 	RoleId int
 }
 
-func (UserRolesRole) TableName() string {
+func (UserRoles) TableName() string {
 	return "user_roles_role"
 }
