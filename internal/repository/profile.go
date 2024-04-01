@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"naive-admin/internal/model"
+	"naive-admin/pkg/utils/paginator"
 
 	"gorm.io/gorm"
 )
@@ -45,4 +46,21 @@ func (r profileRepo) GetByUserId(c context.Context, id int) (*model.Profile, err
 		return nil, err
 	}
 	return &profile, nil
+}
+
+func (r profileRepo) GetList(c context.Context, p *paginator.Page[model.Profile], query *map[string]string) (err error) {
+	orm := r.DB(c).Model(model.Profile{})
+	if (*query)["gender"] != "" {
+		orm = orm.Where("gender=?", (*query)["gender"])
+	}
+	if (*query)["enable"] != "" {
+		orm = orm.Where("userId in(?)", r.DB(c).Model(model.User{}).Where("enable=?", (*query)["enable"]).Select("id"))
+	}
+	if (*query)["username"] != "" {
+		orm = orm.Where("nickName like ?", "%"+(*query)["username"]+"%")
+	}
+	if err := p.SelectPages(orm); err != nil {
+		return err
+	}
+	return err
 }

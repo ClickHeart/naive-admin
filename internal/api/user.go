@@ -80,18 +80,21 @@ func (user) Delete(c *gin.Context) {
 }
 
 func (user) List(c *gin.Context) {
-	var data = inout.UserListRes{
-		PageData: make([]inout.UserListItem, 0),
-	}
-	var gender = c.DefaultQuery("gender", "")
-	var enable = c.DefaultQuery("enable", "")
-	var username = c.DefaultQuery("username", "")
-	var pageNoReq = c.DefaultQuery("pageNo", "1")
-	var pageSizeReq = c.DefaultQuery("pageSize", "10")
-	pageNo, err := strconv.Atoi(pageNoReq)
-	pageSize, err := strconv.Atoi(pageSizeReq)
-	if err != nil {
-		Resp.Err(c, http.StatusBadRequest, err.Error())
+	var res inout.UserListRes
+	query := map[string]string{
+		"gender":   c.DefaultQuery("gender", ""),
+		"enable":   c.DefaultQuery("enable", ""),
+		"username": c.DefaultQuery("username", ""),
+		"pageNo":   c.DefaultQuery("pageNo", "1"),
+		"pageSize": c.DefaultQuery("pageSize", "10"),
 	}
 
+	data, total, err := s.UserService.GetList(c, &query)
+	if err != nil {
+		Resp.Err(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	res.PageData = data
+	res.Total = total
+	Resp.Succ(c, res)
 }

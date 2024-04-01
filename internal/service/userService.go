@@ -8,6 +8,8 @@ import (
 	r "naive-admin/internal/repository"
 	"naive-admin/pkg/config"
 	"naive-admin/pkg/utils/jwt"
+	"naive-admin/pkg/utils/paginator"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -198,4 +200,40 @@ func (userService) Delete(c context.Context, uid int) (err error) {
 	})
 
 	return nil
+}
+
+func (userService) GetList(c context.Context, query *map[string]string) (userList []inout.UserListItem, total int64, err error) {
+	pageNo, _ := strconv.Atoi((*query)["pageNo"])
+	pageSize, _ := strconv.Atoi((*query)["pageSize"])
+	p := &paginator.Page[model.Profile]{
+		CurrentPage: int64(pageNo),
+		PageSize:    int64(pageSize),
+	}
+	if err := r.ProfileRepo.GetList(c, p, query); err != nil {
+		return userList, total, err
+	}
+	total = p.Total
+	for _, data := range p.Data {
+		uInfo, err := r.UserRepo.GetById(c, data.UserId)
+		if err != nil {
+			return userList, total, err
+		}
+		rols, err := r.RoleRepo.GetByUserId(c, data.UserId)
+		if err != nil {
+			return userList, total, err
+		}
+		userList = append(userList, inout.UserListItem{
+			ID:         uInfo.ID,
+			Username:   uInfo.Username,
+			Enable:     uInfo.Enable,
+			CreateTime: uInfo.CreateTime,
+			UpdateTime: uInfo.UpdateTime,
+			Gender:     data.Gender,
+			Avatar:     data.Avatar,
+			Address:    data.Address,
+			Email:      data.Email,
+			Roles:      *rols,
+		})
+	}
+	return
 }
