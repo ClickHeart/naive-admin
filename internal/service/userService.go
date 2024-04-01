@@ -178,3 +178,24 @@ func (userService) Update(c context.Context, data inout.PatchUserReq) error {
 	}
 	return nil
 }
+
+func (userService) Delete(c context.Context, uid int) (err error) {
+	err = r.Repo.Transaction(c, func(ctx context.Context) error {
+		// Create a user
+		if err = r.UserRepo.DeleteById(ctx, uid); err != nil {
+			return err
+		}
+
+		if err = r.UserRolesRepo.DeleteByUid(ctx, uid); err != nil {
+			return err
+		}
+
+		if err = r.ProfileRepo.DeleteByUid(ctx, uid); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return nil
+}

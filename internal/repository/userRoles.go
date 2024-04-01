@@ -17,3 +17,10 @@ func (r userRolesRepo) Create(c context.Context, userRoles *model.UserRolesRole)
 	}
 	return nil
 }
+
+func (r userRolesRepo) DeleteByUid(c context.Context, uid int) (err error) {
+	if err := r.DB(c).Where("userId =?", uid).Delete(&model.UserRolesRole{}).Error; err != nil {
+		return err
+	}
+	return
+}

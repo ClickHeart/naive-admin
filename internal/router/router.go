@@ -31,7 +31,7 @@ func Init(r *gin.Engine) {
 		Auth.DELETE("/user/:id", api.User.Delete)
 		Auth.PATCH("/user/password/reset/:id", api.User.Update)
 		Auth.PATCH("/user/:id", api.User.Update)
-		Auth.PATCH("/user/profile/:id", api.Profile.GetProfile)
+		Auth.PATCH("/user/profile/:id", api.User.Profile)
 		Auth.GET("/user/detail", api.User.Detail)
 	}
 }

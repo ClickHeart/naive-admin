@@ -21,6 +21,13 @@ func (r userRepo) Create(c context.Context, user *model.User) error {
 	return nil
 }
 
+func (r userRepo) DeleteById(c context.Context, uid int) (err error) {
+	if err := r.DB(c).Where("id =?", uid).Delete(&model.User{}).Error; err != nil {
+		return err
+	}
+	return err
+}
+
 func (r userRepo) Update(c context.Context, user *model.User) error {
 
 	if err := r.DB(c).Model(&user).Updates(user).Error; err != nil {
